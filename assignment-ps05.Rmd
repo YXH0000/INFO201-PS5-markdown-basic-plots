@@ -279,7 +279,92 @@ _In 2019, these points are less dispersed and the separation between continents 
 4. (6pt) Compute the average life expectancy for each continent in 1960 and 2019. Do the results fit with what do you see on the figures?
 
 ```{r}
+library(dplyr)
+avg_life_expectancy_1960 <- gapminder %>% 
+  filter(time == 1960) %>% 
+  group_by(region) %>% 
+  summarise(avg_life_expectancy_1960 = mean(lifeExpectancy, na.rm = TRUE))
+
+avg_life_expectancy_1960
 
 ```
 
+```{r}
+library(dplyr)
+
+avg_life_expectancy_2019 <- gapminder %>% 
+  filter(time == 2019) %>% 
+  group_by(region) %>% 
+  summarize(avg_life_expectancy_2019 = mean(lifeExpectancy, na.rm = TRUE))
+
+avg_life_expectancy_2019
+
+
+```
+
+
+
+_There is a overall increase in average life expectancy, which accord with the scatter plot.This may result from the development of economy._
+
+
+5. (8pt) Compute the average LE growth from 1960-2019 across the continents. Show the results in the order of growth. Explain what do you see.
+Hint: these data (data in long form) is not the simplest to compute growth. But you may want to check out the lag() function. And do not forget to group data by continent when using lag(), otherwise your results will be messed up!
+
+
+```{r}
+library(dplyr)
+avg_le_growth <- gapminder %>% 
+  filter(time %in% c(1960, 2019)) %>% 
+  group_by(region) %>% 
+  mutate(le_diff = lifeExpectancy - lag(lifeExpectancy)) %>% 
+  filter(time == 2019) %>% 
+  summarize(avg_le_growth = mean(le_diff, na.rm = TRUE)) %>% 
+  arrange(desc(avg_le_growth))
+
+avg_le_growth
+
+
+```
+
+
+
+_The results show that from 1960 to 2019, Africa had the highest average increase in life expectancy (22.5 years), followed by Asia (22.4 years). Europe has the lowest average growth rate, but this is also because in 1960 Europe already had a higher average life expectancy. Significant progress has been made in increasing life expectancy over the past 60 years, but this progress has not been evenly distributed across continents._
+
+
+6. (6pt) Show the histogram of GDP per capita for years of 1960 and 2019. Try to put both histograms on the same graph, see how well you can do it!
+
+```{r}
+library(ggplot2)
+
+# Subset the data for the two years of interest
+gdp_1960 <- gapminder %>% filter(time == 1960 & !is.na(GDP_PC))
+gdp_2019 <- gapminder %>% filter(time == 2019 & !is.na(GDP_PC))
+
+# Create the histograms and combine them using ggplot2
+hist_1960 <- ggplot(gdp_1960, aes(x = GDP_PC)) +
+  geom_histogram(binwidth = 1000, fill = "lightblue", color = "black") +
+  labs(title = "GDP per Capita in 1960", x = "GDP per Capita", y = "Count") +
+  theme_minimal()
+
+hist_2019 <- ggplot(gdp_2019, aes(x = GDP_PC)) +
+  geom_histogram(binwidth = 1000, fill = "lightgreen", color = "black") +
+  labs(title = "GDP per Capita in 2019", x = "GDP per Capita", y = "Count") +
+  theme_minimal()
+
+# Combine histograms
+combined_hist <- ggplot() +
+  # Add first histogram
+  annotation_custom(ggplotGrob(hist_1960), xmin=-Inf, xmax=0.5, ymin=-Inf, ymax=1) +
+  # Add second histogram
+  annotation_custom(ggplotGrob(hist_2019), xmin=0.5, xmax=Inf, ymin=-Inf, ymax=1) +
+  # Add separator line
+  geom_vline(xintercept = 0.5, color = "black") +
+  # Set plot title and axis labels
+  labs(title = "Combined Histogram of GDP Per Capita (1960 vs 2019)",
+       x = "GDP Per Capita (constant 2010 US$)",
+       y = "Frequency") +
+  # Set plot theme
+  theme_minimal()
+
+```
 
