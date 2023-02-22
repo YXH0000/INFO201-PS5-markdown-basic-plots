@@ -334,37 +334,64 @@ _The results show that from 1960 to 2019, Africa had the highest average increas
 6. (6pt) Show the histogram of GDP per capita for years of 1960 and 2019. Try to put both histograms on the same graph, see how well you can do it!
 
 ```{r}
+library(dplyr)
 library(ggplot2)
 
-# Subset the data for the two years of interest
-gdp_1960 <- gapminder %>% filter(time == 1960 & !is.na(GDP_PC))
-gdp_2019 <- gapminder %>% filter(time == 2019 & !is.na(GDP_PC))
+# Filter data for years 1960 and 2019
+gdp_1960_2019 <- gapminder %>% 
+  filter(time %in% c(1960, 2019)) %>% 
+  select(region, time, GDP_PC)
 
-# Create the histograms and combine them using ggplot2
-hist_1960 <- ggplot(gdp_1960, aes(x = GDP_PC)) +
-  geom_histogram(binwidth = 1000, fill = "lightblue", color = "black") +
-  labs(title = "GDP per Capita in 1960", x = "GDP per Capita", y = "Count") +
-  theme_minimal()
-
-hist_2019 <- ggplot(gdp_2019, aes(x = GDP_PC)) +
-  geom_histogram(binwidth = 1000, fill = "lightgreen", color = "black") +
-  labs(title = "GDP per Capita in 2019", x = "GDP per Capita", y = "Count") +
-  theme_minimal()
-
-# Combine histograms
-combined_hist <- ggplot() +
-  # Add first histogram
-  annotation_custom(ggplotGrob(hist_1960), xmin=-Inf, xmax=0.5, ymin=-Inf, ymax=1) +
-  # Add second histogram
-  annotation_custom(ggplotGrob(hist_2019), xmin=0.5, xmax=Inf, ymin=-Inf, ymax=1) +
-  # Add separator line
-  geom_vline(xintercept = 0.5, color = "black") +
-  # Set plot title and axis labels
-  labs(title = "Combined Histogram of GDP Per Capita (1960 vs 2019)",
-       x = "GDP Per Capita (constant 2010 US$)",
+# Create histogram for 1960 GDP per capita
+hist_1960 <- ggplot(gdp_1960_2019, aes(x = GDP_PC, fill = factor(time == 1960))) + 
+  geom_histogram(alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("#33346a", "#e2ce90"), name = "Year",
+                    labels = c("2019", "1960")) +
+  labs(title = "Histogram of GDP per capita in 1960 and 2019", x = "GDP per capita",
        y = "Frequency") +
-  # Set plot theme
   theme_minimal()
+
+# Create histogram for 2019 GDP per capita
+hist_2019 <- ggplot(gdp_1960_2019, aes(x = GDP_PC, fill = factor(time == 2019))) + 
+  geom_histogram(alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("#33346a", "#e2ce90"), name = "Year",
+                    labels = c("1960", "2019")) +
+  labs(title = "Histogram of GDP per capita in 1960 and 2019", x = "GDP per capita",
+       y = "Frequency") +
+  theme_minimal()
+
+# Combine the two histograms using cowplot package
+library(cowplot)
+
+combined_hist <- ggdraw() +
+  draw_plot(hist_1960, 0, 0, 0.5, 1) +
+  draw_plot(hist_2019, 0.5, 0, 0.5, 1)
+
+# Display the combined histogram
+combined_hist
+```
+
+7. (6pt) What was the ranking of US in terms of life expectancy in 1960 and in 2019? (When counting from top.)
+Hint: check out the function rank()!
+Hint2: 17 for 1960.
+```{r}
+library(dplyr)
+
+# Rank the countries in each year based on life expectancy
+ranked_data <- gapminder %>%
+  filter(time %in% c(1960, 2019)) %>%
+  group_by(time) %>%
+  mutate(rank_life_expectancy = rank(desc(lifeExpectancy)))
+
+# Extract the rank for the US in each year
+us_ranks <- ranked_data %>%
+  filter(region == "United States of America") %>%
+  select(time, rank_life_expectancy)
+
+# Print the results
+print(us_ranks)
 
 ```
 
+8. (6pt) If you did this correctly, then you noticed that US ranking has been falling quite a bit. But we also have more countries in 2019–what about the relative rank divided by the corresponding number of countries that have LE data in the corresponding year?
+Hint: 0.0904 for 1960.
