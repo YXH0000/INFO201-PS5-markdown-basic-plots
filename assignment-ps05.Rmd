@@ -377,21 +377,71 @@ Hint2: 17 for 1960.
 ```{r}
 library(dplyr)
 
-# Rank the countries in each year based on life expectancy
-ranked_data <- gapminder %>%
-  filter(time %in% c(1960, 2019)) %>%
-  group_by(time) %>%
-  mutate(rank_life_expectancy = rank(desc(lifeExpectancy)))
+# Compute the ranking of the US in terms of life expectancy in 1960
+rank_1960 <- gapminder %>%
+  filter(time == 1960) %>%
+  filter(!is.na(lifeExpectancy)) %>% 
+  mutate(name == "United States", "United States of America") %>%
+  arrange(desc(lifeExpectancy)) %>%
+  mutate(rank = rank(-lifeExpectancy, ties.method = "min")) %>%
+  filter(name == "United States of America") %>%
+  select(rank)
 
-# Extract the rank for the US in each year
-us_ranks <- ranked_data %>%
-  filter(region == "United States of America") %>%
-  select(time, rank_life_expectancy)
+# Compute the ranking of the US in terms of life expectancy in 2019
+rank_2019 <- gapminder %>%
+  filter(time == 2019) %>%
+  filter(!is.na(lifeExpectancy)) %>%
+  mutate(name == "United States of America") %>%
+  arrange(desc(lifeExpectancy)) %>%
+  mutate(rank = rank(-lifeExpectancy, ties.method = "min")) %>%
+  filter(name == "United States of America") %>%
+  select(rank)
 
-# Print the results
-print(us_ranks)
+rank_1960
+rank_2019
 
 ```
 
 8. (6pt) If you did this correctly, then you noticed that US ranking has been falling quite a bit. But we also have more countries in 2019–what about the relative rank divided by the corresponding number of countries that have LE data in the corresponding year?
 Hint: 0.0904 for 1960.
+
+```{r}
+# Number of countries with LE data in 1960
+n_countries_1960 <- gapminder %>%
+  filter(!is.na(lifeExpectancy) & time == 1960) %>%
+  summarize(n_countries = n()) %>%
+  pull()
+
+# Rank of US in 1960
+rank_us_1960 <- gapminder %>%
+  filter(!is.na(lifeExpectancy) & time == 1960) %>%
+  select(name, lifeExpectancy) %>%
+  arrange(desc(lifeExpectancy)) %>%
+  mutate(rank = rank(-lifeExpectancy, ties.method = "first")) %>%
+  filter(name == "United States of America") %>%
+  pull(rank)
+
+# Relative rank divided by number of countries with LE data in 1960
+relative_rank_1960 <- rank_us_1960 / n_countries_1960
+
+# Number of countries with LE data in 2019
+n_countries_2019 <- gapminder %>%
+  filter(!is.na(lifeExpectancy) & time == 2019) %>%
+  summarize(n_countries = n()) %>%
+  pull()
+
+# Rank of US in 2019
+rank_us_2019 <- gapminder %>%
+  filter(!is.na(lifeExpectancy) & time == 2019) %>%
+  select(name, lifeExpectancy) %>%
+  arrange(desc(lifeExpectancy)) %>%
+  mutate(rank = rank(-lifeExpectancy, ties.method = "first")) %>%
+  filter(name == "United States of America") %>%
+  pull(rank)
+
+relative_rank_2019 <- rank_us_2019 / n_countries_2019
+
+```
+
+
+_Time spend: Super struggle work, 6 hours or even more._

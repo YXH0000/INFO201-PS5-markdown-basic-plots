@@ -869,22 +869,32 @@ rank()! Hint2: 17 for 1960.</li>
 </ol>
 <pre class="r"><code>library(dplyr)
 
-# Rank the countries in each year based on life expectancy
-ranked_data &lt;- gapminder %&gt;%
-  filter(time %in% c(1960, 2019)) %&gt;%
-  group_by(time) %&gt;%
-  mutate(rank_life_expectancy = rank(desc(lifeExpectancy)))
+# Compute the ranking of the US in terms of life expectancy in 1960
+rank_1960 &lt;- gapminder %&gt;%
+  filter(time == 1960) %&gt;%
+  filter(!is.na(lifeExpectancy)) %&gt;% 
+  mutate(name == &quot;United States&quot;, &quot;United States of America&quot;) %&gt;%
+  arrange(desc(lifeExpectancy)) %&gt;%
+  mutate(rank = rank(-lifeExpectancy, ties.method = &quot;min&quot;)) %&gt;%
+  filter(name == &quot;United States of America&quot;) %&gt;%
+  select(rank)
 
-# Extract the rank for the US in each year
-us_ranks &lt;- ranked_data %&gt;%
-  filter(region == &quot;United States of America&quot;) %&gt;%
-  select(time, rank_life_expectancy)
+# Compute the ranking of the US in terms of life expectancy in 2019
+rank_2019 &lt;- gapminder %&gt;%
+  filter(time == 2019) %&gt;%
+  filter(!is.na(lifeExpectancy)) %&gt;%
+  mutate(name == &quot;United States of America&quot;) %&gt;%
+  arrange(desc(lifeExpectancy)) %&gt;%
+  mutate(rank = rank(-lifeExpectancy, ties.method = &quot;min&quot;)) %&gt;%
+  filter(name == &quot;United States of America&quot;) %&gt;%
+  select(rank)
 
-# Print the results
-print(us_ranks)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # Groups:   time [0]
-## # … with 2 variables: time &lt;int&gt;, rank_life_expectancy &lt;dbl&gt;</code></pre>
+rank_1960</code></pre>
+<pre><code>##   rank
+## 1   18</code></pre>
+<pre class="r"><code>rank_2019</code></pre>
+<pre><code>##   rank
+## 1   47</code></pre>
 <ol start="8" style="list-style-type: decimal">
 <li>(6pt) If you did this correctly, then you noticed that US ranking
 has been falling quite a bit. But we also have more countries in
@@ -892,6 +902,41 @@ has been falling quite a bit. But we also have more countries in
 countries that have LE data in the corresponding year? Hint: 0.0904 for
 1960.</li>
 </ol>
+<pre class="r"><code># Number of countries with LE data in 1960
+n_countries_1960 &lt;- gapminder %&gt;%
+  filter(!is.na(lifeExpectancy) &amp; time == 1960) %&gt;%
+  summarize(n_countries = n()) %&gt;%
+  pull()
+
+# Rank of US in 1960
+rank_us_1960 &lt;- gapminder %&gt;%
+  filter(!is.na(lifeExpectancy) &amp; time == 1960) %&gt;%
+  select(name, lifeExpectancy) %&gt;%
+  arrange(desc(lifeExpectancy)) %&gt;%
+  mutate(rank = rank(-lifeExpectancy, ties.method = &quot;first&quot;)) %&gt;%
+  filter(name == &quot;United States of America&quot;) %&gt;%
+  pull(rank)
+
+# Relative rank divided by number of countries with LE data in 1960
+relative_rank_1960 &lt;- rank_us_1960 / n_countries_1960
+
+# Number of countries with LE data in 2019
+n_countries_2019 &lt;- gapminder %&gt;%
+  filter(!is.na(lifeExpectancy) &amp; time == 2019) %&gt;%
+  summarize(n_countries = n()) %&gt;%
+  pull()
+
+# Rank of US in 2019
+rank_us_2019 &lt;- gapminder %&gt;%
+  filter(!is.na(lifeExpectancy) &amp; time == 2019) %&gt;%
+  select(name, lifeExpectancy) %&gt;%
+  arrange(desc(lifeExpectancy)) %&gt;%
+  mutate(rank = rank(-lifeExpectancy, ties.method = &quot;first&quot;)) %&gt;%
+  filter(name == &quot;United States of America&quot;) %&gt;%
+  pull(rank)
+
+relative_rank_2019 &lt;- rank_us_2019 / n_countries_2019</code></pre>
+<p><em>Time spend: Super struggle work, 6 hours or even more.</em></p>
 </div>
 
 
